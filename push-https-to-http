@@ -1,0 +1,19 @@
+acl youtubegoogle url_regex -i ^http.*(youtube|google).*
+acl phonebrowser browser -i regexp (Android|BlackBerry|iPhone|Phone|iPad|PlayBook|Mobile)
+request_header_access User-Agent deny youtubegoogle !phonebrowser
+request_header_replace User-Agent Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+
+===================================================================================
+
+acl youtube_video url_regex -i ^http.*(youtube|googlevideo|all-nettools).*
+acl iphone browser -i regexp (iPhone|iPad)
+acl BB browser -i regexp (BlackBerry|PlayBook)
+acl Winphone browser -i regexp (Windows.*Phone|Trident|IEMobile)
+acl Android browser -i regexp Android
+request_header_access User-Agent deny youtube_video !iphone !BB !Winphone !Android
+request_header_replace User-Agent Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:21.0; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27 Chrome/27.0.1453.94 Gecko/20100101 Firefox/21.0 Googlebot/2.1 (+http://www.googlebot.com/bot.html)
+
+===================================================================================
+# by pass proxy authentication for a User Agent of Java app
+acl Java browser Java/1.4 Java/1.5 Java/1.6  Java/1.7  Java/1.8  Java/1.9
+http_access allow Java
