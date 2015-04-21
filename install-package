@@ -1,6 +1,7 @@
 glibc-headers  libdb4-dev libecap-dev  libtool-ltdl-dev  openldap-dev openssl-dev pam-dev
 fakeroot  ebtables bridge-utils  apache2  ccze
 
+=> apt-get -y install
 
 libcppunit-dev
 libexpat-dev
@@ -16,3 +17,4 @@ openssl
 devscripts
 cdbs
 ccze
+rpm
