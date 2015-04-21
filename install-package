@@ -1,0 +1,3 @@
+cppunit-devel expat-devel glibc-headers krb5-devel libcap-devel libdb-devel libdb4-devel libecap-devel libtool libtool-ltdl-devel libxml2-devel openldap-devel openssl-devel pam-devel
+rpmlib(CompressedFileNames) <= 3.0.4-1
+rpmlib(FileDigests) <= 4.6.0-1
