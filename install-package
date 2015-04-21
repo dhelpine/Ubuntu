@@ -18,3 +18,5 @@ devscripts
 cdbs
 ccze
 rpm
+
+apt-get install alien dpkg-dev debhelper
