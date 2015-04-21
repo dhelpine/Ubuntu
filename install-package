@@ -1,3 +1,18 @@
-cppunit-devel expat-devel glibc-headers krb5-devel libcap-devel libdb-devel libdb4-devel libecap-devel libtool libtool-ltdl-devel libxml2-devel openldap-devel openssl-devel pam-devel
-rpmlib(CompressedFileNames) <= 3.0.4-1
-rpmlib(FileDigests) <= 4.6.0-1
+glibc-headers  libdb4-dev libecap-dev  libtool-ltdl-dev  openldap-dev openssl-dev pam-dev
+fakeroot  ebtables bridge-utils  apache2  ccze
+
+
+libcppunit-dev
+libexpat-dev
+libkrb5-dev
+libcap-dev
+libdb-dev
+libtool
+libxml2-dev
+libldap2-dev
+libssl-dev
+libsasl2-dev
+openssl
+devscripts
+cdbs
+ccze
