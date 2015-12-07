@@ -1,0 +1,123 @@
+$ touch /etc/squid/squid.conf.local
+
+$ echo "
+https_port 192.168.21.212:3127 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem
+http_port 192.168.21.212:3128
+http_port 192.168.21.212:3129 tproxy
+
+memory_pools off
+reload_into_ims on
+refresh_all_ims on
+vary_ignore_expire on
+maximum_object_size_in_memory 0 KB
+
+strip_query_terms off
+cache_swap_high 98
+cache_swap_low 95
+max_filedesc 10240
+
+fqdncache_size 2048
+ipcache_size 2048
+ipcache_high 98
+ipcache_low 95
+
+qos_flows local-hit=0x30
+qos_flows sibling-hit=0x30
+qos_flows parent-hit=0x30
+dns_nameservers 208.67.222.222 208.67.220.220 8.8.8.8 8.8.4.4
+
+acl urltohttp url_regex -i ^http.*(youtube|googlevideo|all-nettools).*
+acl iphone browser -i regexp (iPhone|iPad)
+acl BB browser -i regexp (BlackBerry|PlayBook)
+acl Winphone browser -i regexp (Windows.*Phone|Trident|IEMobile)
+acl Android browser -i regexp Android
+request_header_access User-Agent deny urltohttp !iphone !BB !Winphone !Android
+request_header_replace User-Agent Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:21.0; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27 Chrome/27.0.1453.94 Gecko/20100101 Firefox/21.0 Googlebot/2.1 (+http://www.googlebot.com/bot.html)
+
+acl html5_video_tag url_regex -i ^http.*video/webm.*
+acl html5_video_tag url_regex -i ^http.*video/mp4.*
+#acl range url_regex -i ^http.*range.*
+http_access allow html5_video_tag
+
+acl helper url_regex -i ^https?\:\/\/.*
+acl helper url_regex -i ^https?\:\/\/.*youtube.*api.*stats.*ads.*
+acl helper url_regex -i ^https?\:\/\/.*youtube.*(ptracking|set_awesome).*
+acl helper url_regex -i ^https?\:\/\/.*youtube.*(stream_204|watchtime|qoe|atr).*
+acl helper url_regex -i ^https?\:\/\/.*youtube.*player_204.*
+acl helper url_regex -i ^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*title.*
+acl helper url_regex -i ^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*
+acl helper url_regex -i ^https?\:\/\/.*utm.gif.*
+acl helper url_regex -i ^https?\:\/\/fbexternal-a\.akamaihd\.net\/safe_image\.php\?d.*
+acl helper url_regex -i ^https?\:\/\/fbstatic-a\.akamaihd\.net\/safe_image\.php\?d.*
+acl helper url_regex -i ^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*x.*\/.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*
+acl helper url_regex -i ^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*
+acl helper url_regex -i ^https?\:\/\/c2lo\.reverbnation\.com\/audio_player\/ec_stream_song\/(.*)\?.*
+
+#acl mimetipe rep_mime_type -i mime-type ^text/html
+acl mimetipe rep_mime_type mime-type text/html
+acl mimetipe rep_mime_type mime-type text/plain
+
+acl ytHack url_regex -i \/pagead\/js\/lidar\.js
+acl ytHack url_regex -i google\.com\/js\/bg\/.*\.js
+#deny_info http://pastebin.com/raw.php?i=NBptAD3B ytHack	#144p
+deny_info http://pastebin.com/raw.php?i=K3xJKL33 ytHack		#240p
+#deny_info http://pastebin.com/raw.php?i=CzuzS8Kt ytHack	#360p
+http_access deny ytHack
+
+acl chrome url_regex -i ^http:\/\/.*\.pack.google.com\/edgedl\/chrome\/win\/.*
+acl chrome url_regex -i ^http:\/\/cache.pack.google.com\/edgedl\/.*
+acl chrome url_regex -i ^http:\/\/www.google.com\/dl\/chrome\/win\/.*
+acl chrome url_regex -i ^http:\/\/.*.gvt1.com\/edgedl\/chrome\/win\/.*\/.*
+acl chrome url_regex -i ^https:\/\/dl.google.com\/chrome\/win\/.*\/.*.exe
+http_access deny chrome
+
+acl spliceserver ssl::server_name "/etc/squid/splicesaja.txt"
+
+acl step1 at_step SslBump1
+acl step2 at_step SslBump2
+acl step3 at_step SslBump3
+acl httptomiss http_status 302
+acl httptomiss http_status 301
+#acl httptomiss http_status 204
+acl getmethod method GET
+
+quick_abort_min 0 KB
+quick_abort_max 0 KB
+quick_abort_pct 100
+
+always_direct allow all
+ssl_bump splice step1 spliceserver
+ssl_bump peek step1 all
+ssl_bump splice step2 spliceserver
+ssl_bump bump step2 all
+ssl_bump splice step3 spliceserver
+sslproxy_cert_error allow all
+sslproxy_flags DONT_VERIFY_PEER
+sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
+sslcrtd_children 2000 startup=100
+
+cache deny localhost
+
+store_id_program /etc/squid/storeid
+store_id_children 2000 startup=100 #idle=1 concurrency=1
+store_id_access deny !getmethod
+store_id_access allow helper
+store_id_access deny all
+
+store_miss deny helper httptomiss
+send_hit deny helper httptomiss
+store_miss deny urltohttp httptomiss
+send_hit deny urltohttp httptomiss
+#store_miss deny httptomiss
+#send_hit deny httptomiss
+store_miss deny mimetipe
+send_hit deny mimetipe
+
+include /etc/squid/refresh.conf
+
+#refresh_pattern -i ^https?\:\/g-no\/youtube\/.* 432000 100% 518400 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
+#refresh_pattern -i ^https?\:\/\/.* 0 95% 432000 override-expire override-lastmod ignore-reloadignore-no-store ignore-private ignore-auth ignore-must-revalidate
+refresh_pattern -i ^http.*g-no.* 432000 99% 432000 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
+refresh_pattern . 0 95% 432000 override-expire override-lastmod refresh-ims reload-into-ims ignore-no-store ignore-private ignore-auth ignore-must-revalidate
+
+max_stale 60 days
