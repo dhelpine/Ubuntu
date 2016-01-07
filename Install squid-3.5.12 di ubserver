@@ -11,6 +11,8 @@ $ cd /usr/src
 $ wget -c http://www.squid-cache.org/Versions/v3/3.5/squid-SQVER.tar.bz2
 $ tar -jxf squid-SQVER.tar.bz2
 $ cd squid-SQVER
+$ wget ftp://artfiles.org/squid-cache.org/pub/archive/3.5/squid-3.5.12.patch
+$ patch -p0 < squid-3.5.12.patch
 $ make clean && make distclean
 $ ./configure '--prefix=/usr' '--bindir=/usr/bin' '--sbindir=/usr/sbin' '--libexecdir=/usr/lib/squid' '--sysconfdir=/etc/squid' '--localstatedir=/var' '--libdir=/usr/lib' '--includedir=/usr/include' '--datadir=/usr/share/squid' '--infodir=/usr/share/info' '--mandir=/usr/share/man' '--disable-dependency-tracking' '--disable-strict-error-checking' '--enable-async-io=48' '--with-aufs-threads=48' '--with-pthreads' '--with-openssl' '--enable-storeio=aufs,diskd' '--enable-removal-policies=lru,heap' '--with-aio' '--with-dl' '--enable-icmp' '--enable-esi' '--enable-icap-client' '--disable-wccp' '--disable-wccpv2' '--enable-kill-parent-hack' '--enable-cache-digests' '--disable-select' '--enable-http-violations' '--enable-linux-netfilter' '--enable-follow-x-forwarded-for' '--disable-ident-lookups' '--enable-x-accelerator-vary' '--enable-zph-qos' '--with-default-user=proxy' '--with-logdir=/var/log/squid' '--with-pidfile=/var/run/squid.pid' '--with-swapdir=/var/spool/squid' '--with-large-files' '--enable-ltdl-convenience' '--with-filedescriptors=65536' '--enable-ssl' '--enable-ssl-crtd' '--disable-auth' '--disable-ipv6' '--enable-err-languages=English' '--enable-default-err-language=English' '--build=x86_64' 'build_alias=x86_64'
 $ make && makeinstall
