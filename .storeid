@@ -65,9 +65,11 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
 #youtube
 } elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*title.*/){
     @title      = m/[%&?\/](title[%&=\/][^\&\s\/]*)/;
+    @id = m/[&?](id=[^\&]*)/;
     @itag      = m/[%&?\/](itag[%&=\/][^\&\s\/]*)/;
     @range   = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
-    $out="http://g-no/youtube/@itag@title@range";
+    @redirect = m/[&?](redirect_counter=[^\&]*)/;
+    $out="http://g-no/youtube/@itag@title@id@range@redirect";
  
 #youtube
 } elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*/){
@@ -77,15 +79,17 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
     @range  = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
     @slices = m/[%&?\/](slices[%&=\/][^\&\s\/]*)/;
     @mime     = m/[%&?\/](mime[%&=\/][^\&\s\/]*)/;
+    @begin = m/[&?](begin=[^\&\s]*)/;
+    @redirect = m/[&?](redirect_counter=[^\&]*)/;
     if (defined(@cpn[0])){
         if (-e "/tmp/@cpn"){
         open FILE, "/tmp/@cpn";
         @id = <FILE>;
         close FILE;}
     }
-    $out="http://g-no/youtube/@id@itag@mime@range@slices";
- 
- 
+    $out="http://g-no/youtube/@id@itag@mime@range@slices@begin@redirect";
+
+
 #utmgif
 } elsif ($x=~ m/^https?\:\/\/.*utm.gif.*/) {
     $out="http://g-no/__utm.gif";
