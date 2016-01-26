@@ -1,0 +1,11 @@
+cd /usr/local/bin
+wget https://github.com/hscbrasil/hsc-dynamic-cache/blob/master/hsc-dynamic-cache
+wget https://github.com/hscbrasil/hsc-dynamic-cache/blob/master/extras/simplerewrite
+cd /usr/local/etc
+wget https://github.com/hscbrasil/hsc-dynamic-cache/blob/master/hsc-dynamic-cache-db.txt
+chmod 755 /usr/local/bin/hsc-dynamic-cache
+chown root.proxy /usr/local/bin/hsc-dynamic-cache
+chmod 644 /usr/local/etc/hsc-dynamic-cache-db.txt
+chown root.proxy /usr/local/etc/hsc-dynamic-cache-db.txt
+chmod 755 /usr/local/bin/simplerewrite
+chown root.proxy /usr/local/bin/simplerewrite
