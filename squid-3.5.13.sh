@@ -233,17 +233,14 @@ apt-get upgrade -y
 echo Y | apt-get install build-essential fakeroot pastebinit checkinstall libcap-dev libssl-dev htop iftop iptraf mtr-tiny ccze bwm-ng
 
 # Instalasi & Kompilasi Squid
-mkdir -p /usr/share/squid
-mkdir -p /usr/share/squid/icons
-mkdir -p /cache
 
 echo 'Download Squid Source dari www.squid-cache.org...'
 sleep 1
 cd /usr/src
 wget -c ftp://artfiles.org/squid-cache.org/pub/archive/3.5/squid-$SQVER.tar.bz2
-tar -jxf squid-$SQVER.tar.bz2
+tar -jxf squid-*
 cd squid-*
-make clean && make distclean
+
 clear
 
 echo 'Memulai Konfigurasi & Kompilasi Squid...'
@@ -930,4 +927,4 @@ chmod 4755 /usr/lib/squid/pinger
 squid -z
 squid -Nd1
 clear
-/etc/init.d/squid restart
+
