@@ -149,6 +149,66 @@ nf_conntrack
 nf_defrag_ipv4
 ipt_REDIRECT"> /etc/modules
 
+# Set iproute dan iptables untuk tproxy
+echo "Setup iptables dan ip route"
+sleep 2
+
+mv /etc/rc.local /etc/rc.local_
+touch /etc/rc.local
+
+echo "
+#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+ 
+modprobe xt_TPROXY
+modprobe xt_socket
+modprobe xt_mark
+modprobe nf_nat
+modprobe nf_conntrack_ipv4
+modprobe nf_conntrack
+modprobe nf_defrag_ipv4
+modprobe ipt_REDIRECT
+modprobe iptable_nat
+ 
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -t nat -F
+iptables -t mangle -N DIVERT
+iptables -t mangle -A DIVERT -j MARK --set-mark 1
+iptables -t mangle -A DIVERT -j ACCEPT
+iptables -t mangle -A INPUT -j ACCEPT
+iptables -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 5050 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8080 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 88 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 182 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8081 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8777 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 80 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 5050 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 8080 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 88 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 182 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8081 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8777 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 443 -j ACCEPT
+ 
+/sbin/ip rule add fwmark 1 lookup 100
+/sbin/ip route add local 0.0.0.0/0 dev lo table 100
+ 
+sysctl net.ipv4.ip_nonlocal_bind=1
+sysctl net.ipv4.ip_forward=1
+ 
+echo 0 > /proc/sys/net/ipv4/conf/lo/rp_filter
+echo 1 > /proc/sys/net/ipv4/ip_forward
+exit 0" > /etc/rc.local
+
 # Set Maksimum Ulimit
 echo "ulimit -Hn 65536
 ulimit -Sn 65535">> /etc/profile
@@ -297,7 +357,7 @@ touch /etc/squid/squid.conf.local
 
 echo "
 http_port 192.168.21.212:3127 tproxy
-https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem  sslflags=DELAYED_AUTH cipher=ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:DHE-RSA-CAMELLIA128-SHA:AES128-SHA:RC4-SHA:HIGH:!aNULL:!MD5:!ADH
+https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem dhparams=/etc/squid/ssl_cert/dhparam.pem
 
 acl ytHack url_regex -i \/pagead\/js\/lidar\.js
 acl ytHack url_regex -i google\.com\/js\/bg\/.*\.js
@@ -351,6 +411,8 @@ ssl_bump peek step1 all
 ssl_bump stare step2 all
 ssl_bump splice step3 all
 sslproxy_cert_error allow all
+sslproxy_options NO_SSLv2,NO_SSLv3,SINGLE_DH_USE
+sslproxy_cipher EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
 sslproxy_flags DONT_VERIFY_PEER
 sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
 sslcrtd_children 50 startup=50
@@ -393,7 +455,7 @@ send_hit deny helper mimetype
 
 include /etc/squid/refresh.conf
 
-max_stale 360 days " > /etc/squid/squid.conf
+max_stale 360 days " > /etc/squid/squid.conf.local
 
 # Konfigurasi refresh pattern
 touch /etc/squid/refresh.conf
@@ -401,9 +463,8 @@ touch /etc/squid/refresh.conf
 echo "
 refresh_pattern -i squid\.internal  10080   80% 79900 override-lastmod override-expire ignore-reload ignore-no-store ignore-must-revalidate ignore-private ignore-auth
 
-refresh_pattern -i ^http.*g-no.* 432000 99% 432000 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
+refresh_pattern -i ^http.*g-no.* 9999999 100% 999999999 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale reload-into-ims refresh-ims
 refresh_pattern . 0 95% 432000 override-expire override-lastmod refresh-ims reload-into-ims ignore-no-store ignore-private ignore-auth ignore-must-revalidate
-
 
 refresh_pattern .*(begin|start)\=[1-9][0-9].*               0 0% 0
 refresh_pattern -i (cgi-bin|mrtg|graph) 0 0% 0
@@ -479,7 +540,7 @@ refresh_pattern -i \.(3gp|ac4|agx|au|avi|axd|bmp|cbr|cbt|cbz|dat|divx|flv|gif|hq
 refresh_pattern -i .(html|htm|css|js)$ 26297 99% 43200
 refresh_pattern -i .index.(html|htm)$ 26297 99% 43200
  
-refresh_pattern -i \.(3gp|avi|ac4|mp(e?g|a|e|1|2|3|4)|m4(a|v)|3g(p?2|p)|mk(a|v)|og(x|v|a|g|m)|wm(a|v)|wmx|wpl|rm|snd|vob|wav|asx|avi|qt|divx|flv|f4v|x-flv|dvr-ms|m(1|2)(v|p)|mov|mid|mpeg)$ 43200 100% 43200 ignore-no-store ignore-must-revalidate ignore-private override-expire override-lastmod reload-into-ims store-stale
+refresh_pattern -i \.(3gp|avi|ac4|mp(e?g|a|e|1|2|3|4)|m4(a|v)|3g(p?2|p)|mk(a|v)|og(x|v|a|g|m)|wm(a|v)|wmx|wpl|rm|snd|vob|wav|asx|avi|qt|divx|flv|f4v|x-flv|dvr-ms|m(1|2)(v|p)|mov|mid|mpeg|webm)$ 9999999 100% 999999999 ignore-no-store ignore-must-revalidate ignore-private override-expire override-lastmod reload-into-ims store-stale refresh-ims
 refresh_pattern -i \.(7z|ace|rar|jar|gz|tgz|bz2|iso|mod|arj|lha|lzh|zip|tar|cab|dat|pak|kom|zip)$ 10080 80% 10080 ignore-no-store ignore-must-revalidate ignore-private override-expire override-lastmod reload-into-ims store-stale
 refresh_pattern -i \.(jp(e?g|e|2)|gif|pn[pg]|bm?|tiff?|ico|swf|css|js|ad)$ 10080 80% 10080 ignore-no-store ignore-must-revalidate ignore-private override-expire override-lastmod reload-into-ims store-stale
 refresh_pattern -i \.(exe|ms(i|u|p)|deb|bin|ax|r(a|p)m|app|pkg|apk|msi|mar|nzp|iop|xpi|dmg|dds|thor|nar|gpf)$ 10080 80% 10080 ignore-no-store ignore-must-revalidate ignore-private override-expire override-lastmod reload-into-ims store-stale
@@ -583,7 +644,7 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
     @itag      = m/[%&?\/](itag[%&=\/][^\&\s\/]*)/;
     @range   = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
     $out="http://g-no/youtube/@itag@title@range";
- 
+
 #youtube
 } elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*/){
     @cpn      = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
@@ -615,6 +676,9 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
  
 #####
 } elsif ($x=~ m/^https?\:\/\/fbstatic-a\.akamaihd\.net\/safe_image\.php\?d.*/) {
+    @d = m/[&?]d\=([^\&\s]*)/;
+    @h = m/[&?]h\=([^\&\s]*)/;
+    @w = m/[&?]w\=([^\&\s]*)/;
     $out="http://g-no/safe_image/d=@d&w=@w&h=@h";
 #####
  
@@ -665,7 +729,6 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
 #animeindo
 } elsif ($x =~ m/^https?\:\/\/.*aisfile\.com:182\/.\/(.*)\/(.*\.(mp4|flv)).*/){
     $out="store-id://aisfile:182.SQUIDINTERNAL/$2\n";
-
 
 #update-mozilla
 } elsif ($x =~ m/^http?\:\/\/.*google\.com\/safebrowsing\/.*/){
@@ -847,67 +910,6 @@ case "$1" in
 esac
 exit 0
 finis
-
-
-# Set iproute dan iptables untuk tproxy
-echo "Setup iptables dan ip route"
-sleep 2
-
-mv /etc/rc.local /etc/rc.local_
-touch /etc/rc.local
-
-echo "
-#!/bin/sh
-#
-# This script will be executed *after* all the other init scripts.
-# You can put your own initialization stuff in here if you don't
-# want to do the full Sys V style init stuff.
-
- 
-modprobe xt_TPROXY
-modprobe xt_socket
-modprobe xt_mark
-modprobe nf_nat
-modprobe nf_conntrack_ipv4
-modprobe nf_conntrack
-modprobe nf_defrag_ipv4
-modprobe ipt_REDIRECT
-modprobe iptable_nat
- 
-iptables -t mangle -F
-iptables -t mangle -X
-iptables -t nat -F
-iptables -t mangle -N DIVERT
-iptables -t mangle -A DIVERT -j MARK --set-mark 1
-iptables -t mangle -A DIVERT -j ACCEPT
-iptables -t mangle -A INPUT -j ACCEPT
-iptables -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 5050 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8080 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 88 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 182 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8081 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8777 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
-iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
-iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 80 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 5050 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 8080 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 88 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 182 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8081 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8777 -j ACCEPT
-iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 443 -j ACCEPT
- 
-/sbin/ip rule add fwmark 1 lookup 100
-/sbin/ip route add local 0.0.0.0/0 dev lo table 100
- 
-sysctl net.ipv4.ip_nonlocal_bind=1
-sysctl net.ipv4.ip_forward=1
- 
-echo 0 > /proc/sys/net/ipv4/conf/lo/rp_filter
-echo 1 > /proc/sys/net/ipv4/ip_forward
-exit 0" > /etc/rc.local
 
 
 # Set Permission dan restart daemon Squid
