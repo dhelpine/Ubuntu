@@ -1,0 +1,16 @@
+$ openssl dhparam -outform PEM -out dhparam.pem 2048
+
+#          dhparams=    File containing DH parameters for temporary/ephemeral
+#                       DH key exchanges. See OpenSSL documentation for details
+#                       on how to create this file.
+#                       WARNING: EDH ciphers will be silently disabled if this
+#                                option is not set.
+https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem  key=/etc/squid/ssl_cert/myCA.der options=NO_SSLv3 dhparams=/usr/local/squid/etc/dhparam.pem
+
+# for Squid-3.5 and older
+sslproxy_options NO_SSLv2,NO_SSLv3,SINGLE_DH_USE
+
+# for Squid-4 and newer
+tls_outgoing_options options=NO_SSLv3,SINGLE_DH_USE
+
+sslproxy_cipher EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:HIGH:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
