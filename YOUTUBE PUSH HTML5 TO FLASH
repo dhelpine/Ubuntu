@@ -1,0 +1,8 @@
+acl BB browser -i regexp (BlackBerry|PlayBook)
+acl Winphone browser -i regexp (Windows.*Phone|Trident|IEMobile)
+acl Android browser -i regexp Android
+acl youtube url_regex -i (youtube|googlevideo|videoplayback).*
+reply_header_access Alternate-Protocol deny all
+request_header_access User-Agent deny youtube !BB !Winphone !Android
+#request_header_replace User-Agent Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14
+request_header_replace User-Agent Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0) Opera 12.14
