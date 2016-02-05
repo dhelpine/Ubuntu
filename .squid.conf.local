@@ -1,123 +1,114 @@
-$ touch /etc/squid/squid.conf.local
+http_port 192.168.21.212:3127 tproxy
+#https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem options=NO_SSLv2,NO_SSLv3,SINGLE_DH_USE dhparams=/etc/squid/ssl_cert/dhparam.pem cipher=EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
+https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem options=NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE dhparams=/etc/squid/ssl_cert/dhparam.pem cipher=ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-CHACHA20-POLY1305:EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+aRSA+SHA384:EDH+aRSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA256:EDH+aRSA+SHA256:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
 
-$ echo "
-https_port 192.168.21.212:3127 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem
-http_port 192.168.21.212:3128
-http_port 192.168.21.212:3129 tproxy
-
-memory_pools off
-reload_into_ims on
-refresh_all_ims on
-vary_ignore_expire on
-maximum_object_size_in_memory 0 KB
-
-strip_query_terms off
-cache_swap_high 98
-cache_swap_low 95
-max_filedesc 10240
-
-fqdncache_size 2048
-ipcache_size 2048
-ipcache_high 98
-ipcache_low 95
-
-qos_flows local-hit=0x30
-qos_flows sibling-hit=0x30
-qos_flows parent-hit=0x30
-dns_nameservers 208.67.222.222 208.67.220.220 8.8.8.8 8.8.4.4
-
-acl urltohttp url_regex -i ^http.*(youtube|googlevideo|all-nettools).*
-acl iphone browser -i regexp (iPhone|iPad)
-acl BB browser -i regexp (BlackBerry|PlayBook)
-acl Winphone browser -i regexp (Windows.*Phone|Trident|IEMobile)
 acl Android browser -i regexp Android
-request_header_access User-Agent deny urltohttp !iphone !BB !Winphone !Android
-request_header_replace User-Agent Mozilla/5.0 (Windows; U; Windows NT 6.1; rv:21.0; en-US) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27 Chrome/27.0.1453.94 Gecko/20100101 Firefox/21.0 Googlebot/2.1 (+http://www.googlebot.com/bot.html)
-
-acl html5_video_tag url_regex -i ^http.*video/webm.*
-acl html5_video_tag url_regex -i ^http.*video/mp4.*
-#acl range url_regex -i ^http.*range.*
-http_access allow html5_video_tag
-
-acl helper url_regex -i ^https?\:\/\/.*
-acl helper url_regex -i ^https?\:\/\/.*youtube.*api.*stats.*ads.*
-acl helper url_regex -i ^https?\:\/\/.*youtube.*(ptracking|set_awesome).*
-acl helper url_regex -i ^https?\:\/\/.*youtube.*(stream_204|watchtime|qoe|atr).*
-acl helper url_regex -i ^https?\:\/\/.*youtube.*player_204.*
-acl helper url_regex -i ^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*title.*
-acl helper url_regex -i ^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*
-acl helper url_regex -i ^https?\:\/\/.*utm.gif.*
-acl helper url_regex -i ^https?\:\/\/fbexternal-a\.akamaihd\.net\/safe_image\.php\?d.*
-acl helper url_regex -i ^https?\:\/\/fbstatic-a\.akamaihd\.net\/safe_image\.php\?d.*
-acl helper url_regex -i ^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*x.*\/.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*
-acl helper url_regex -i ^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*
-acl helper url_regex -i ^https?\:\/\/c2lo\.reverbnation\.com\/audio_player\/ec_stream_song\/(.*)\?.*
-
-#acl mimetipe rep_mime_type -i mime-type ^text/html
-acl mimetipe rep_mime_type mime-type text/html
-acl mimetipe rep_mime_type mime-type text/plain
+acl youtube url_regex -i (youtube|googlevideo|videoplayback).*
+reply_header_access Alternate-Protocol deny all
+request_header_access User-Agent deny youtube !Android
+#request_header_replace User-Agent Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14
+request_header_replace User-Agent Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0) Opera 12.14
 
 acl ytHack url_regex -i \/pagead\/js\/lidar\.js
 acl ytHack url_regex -i google\.com\/js\/bg\/.*\.js
 #deny_info http://pastebin.com/raw.php?i=NBptAD3B ytHack	#144p
-deny_info http://pastebin.com/raw.php?i=K3xJKL33 ytHack		#240p
-#deny_info http://pastebin.com/raw.php?i=CzuzS8Kt ytHack	#360p
+#deny_info http://pastebin.com/raw.php?i=K3xJKL33 ytHack	#240p
+deny_info http://pastebin.com/raw.php?i=CzuzS8Kt ytHack		#360p
 http_access deny ytHack
 
 acl chrome url_regex -i ^http:\/\/.*\.pack.google.com\/edgedl\/chrome\/win\/.*
 acl chrome url_regex -i ^http:\/\/cache.pack.google.com\/edgedl\/.*
 acl chrome url_regex -i ^http:\/\/www.google.com\/dl\/chrome\/win\/.*
-acl chrome url_regex -i ^http:\/\/.*.gvt1.com\/edgedl\/chrome\/win\/.*\/.*
-acl chrome url_regex -i ^https:\/\/dl.google.com\/chrome\/win\/.*\/.*.exe
 http_access deny chrome
+
+memory_pools off
+pinger_enable off
+strip_query_terms off
+
+reload_into_ims on
+refresh_all_ims on
+vary_ignore_expire on
+
+maximum_object_size_in_memory 0 KB
+
+cache_swap_high 99
+cache_swap_low 98
+max_filedesc 10240
+
+ipcache_size 1024
+ipcache_high 95
+ipcache_low 90
+
+qos_flows local-hit=0x30
+
+dns_nameservers 208.67.222.222 208.67.220.220
 
 acl spliceserver ssl::server_name "/etc/squid/splicesaja.txt"
 
 acl step1 at_step SslBump1
 acl step2 at_step SslBump2
 acl step3 at_step SslBump3
-acl httptomiss http_status 302
-acl httptomiss http_status 301
-#acl httptomiss http_status 204
-acl getmethod method GET
 
 quick_abort_min 0 KB
 quick_abort_max 0 KB
-quick_abort_pct 100
+quick_abort_pct 98
 
 always_direct allow all
 ssl_bump splice step1 spliceserver
-ssl_bump peek step1 all
 ssl_bump splice step2 spliceserver
-ssl_bump bump step2 all
 ssl_bump splice step3 spliceserver
+ssl_bump peek step1 all
+ssl_bump stare step2 all
+ssl_bump splice step3 all
 sslproxy_cert_error allow all
+#dhparams=/etc/squid/ssl_cert/dhparam.pem
+#sslproxy_options NO_SSLv2,NO_SSLv3,SINGLE_DH_USE
+#sslproxy_cipher EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
 sslproxy_flags DONT_VERIFY_PEER
 sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
-sslcrtd_children 2000 startup=100
+sslcrtd_children 50 startup=50
+
+#acl youtube dstdomain .youtube.com
+#url_rewrite_program /etc/squid/phpredir.php
+#url_rewrite_access allow youtube
+#cache deny youtube
+
+acl store_rewrite_list urlpath_regex \/(get_video\?|videodownload\?|videoplayback.*id)
+
+acl rewritedoms dstdomain .dailymotion.com .video-http.media-imdb.com .dl.sourceforge.net .prod.video.msn.com .fbcdn.net .akamaihd.net vl.mccont.com .mais.uol.com.br .streaming.r7.com
+acl yt url_regex -i googlevideo.*videoplayback
+acl gmaps url_regex -i ^https?:\/\/(khms|mt)[0-9]+\.google\.[a-z\.]+\/.*
+acl ttv url_regex -i terratv
+acl globo url_regex -i ^http:\/\/voddownload[0-9]+\.globo\.com.*
+acl dm url_regex -i dailymotion\-flv2
+
+acl helper url_regex -i ^https?\:\/\/.*
+acl httptomiss http_status 302
+acl mimetype rep_mime_type mime-type ^text/plain
+acl mimetype rep_mime_type mime-type ^text/html
+acl getmethod method GET
 
 cache deny localhost
 
-store_id_program /etc/squid/storeid
-store_id_children 2000 startup=100 #idle=1 concurrency=1
+store_id_program /etc/squid/storeid.pl
+store_id_extras "%>a/%>A %un %>rm myip=%la myport=%lp referer=%{Referer}>h"
+store_id_children 50 startup=50
 store_id_access deny !getmethod
+store_id_access allow store_rewrite_list
+store_id_access allow rewritedoms
+store_id_access allow yt
+store_id_access allow gmaps
+store_id_access allow ttv
+store_id_access allow globo
+store_id_access allow dm
 store_id_access allow helper
 store_id_access deny all
 
 store_miss deny helper httptomiss
 send_hit deny helper httptomiss
-store_miss deny urltohttp httptomiss
-send_hit deny urltohttp httptomiss
-#store_miss deny httptomiss
-#send_hit deny httptomiss
-store_miss deny mimetipe
-send_hit deny mimetipe
+store_miss deny helper mimetype
+send_hit deny helper mimetype
 
 include /etc/squid/refresh.conf
 
-#refresh_pattern -i ^https?\:\/g-no\/youtube\/.* 432000 100% 518400 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
-#refresh_pattern -i ^https?\:\/\/.* 0 95% 432000 override-expire override-lastmod ignore-reloadignore-no-store ignore-private ignore-auth ignore-must-revalidate
-refresh_pattern -i ^http.*g-no.* 432000 99% 432000 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
-refresh_pattern . 0 95% 432000 override-expire override-lastmod refresh-ims reload-into-ims ignore-no-store ignore-private ignore-auth ignore-must-revalidate
-
-max_stale 60 days
+max_stale 360 days
