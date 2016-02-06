@@ -1,0 +1,20 @@
+$ openssl dhparam -outform PEM -out dhparam.pem 2048
+
+#          dhparams=    File containing DH parameters for temporary/ephemeral
+#                       DH key exchanges. See OpenSSL documentation for details
+#                       on how to create this file.
+#                       WARNING: EDH ciphers will be silently disabled if this
+#                                option is not set.
+https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem  key=/etc/squid/ssl_cert/myCA.der
+
+# for Squid-3.5 and older
+sslproxy_options=NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE
+
+#dhparams
+tls-dh=/etc/squid/ssl_cert/dhparam.pem
+
+# for Squid-4 and newer
+tls_outgoing_options options=NO_SSLv3,SINGLE_DH_USE
+
+sslproxy_cipher=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+
