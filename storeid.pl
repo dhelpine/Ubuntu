@@ -1,6 +1,4 @@
-$ touch /etc/squid/storeid
-
-$ echo "
+cat > /etc/squid/storeid.pl <<- 'selesai'
 #!/usr/bin/perl
  
 $|=1;
@@ -65,12 +63,10 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
 #youtube
 } elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*title.*/){
     @title      = m/[%&?\/](title[%&=\/][^\&\s\/]*)/;
-    @id = m/[&?](id=[^\&]*)/;
     @itag      = m/[%&?\/](itag[%&=\/][^\&\s\/]*)/;
     @range   = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
-    @redirect = m/[&?](redirect_counter=[^\&]*)/;
-    $out="http://g-no/youtube/@itag@title@id@range@redirect";
- 
+    $out="http://pc-mikrotik/youtube/@itag@title@range";
+
 #youtube
 } elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*/){
     @cpn      = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
@@ -79,20 +75,18 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
     @range  = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
     @slices = m/[%&?\/](slices[%&=\/][^\&\s\/]*)/;
     @mime     = m/[%&?\/](mime[%&=\/][^\&\s\/]*)/;
-    @begin = m/[&?](begin=[^\&\s]*)/;
-    @redirect = m/[&?](redirect_counter=[^\&]*)/;
     if (defined(@cpn[0])){
         if (-e "/tmp/@cpn"){
         open FILE, "/tmp/@cpn";
         @id = <FILE>;
         close FILE;}
     }
-    $out="http://g-no/youtube/@id@itag@mime@range@slices@begin@redirect";
-
-
+    $out="http://pc-mikrotik/youtube/@id@itag@mime@range@slices";
+ 
+ 
 #utmgif
 } elsif ($x=~ m/^https?\:\/\/.*utm.gif.*/) {
-    $out="http://g-no/__utm.gif";
+    $out="http://pc-mikrotik/__utm.gif";
  
  
 #safe_image FB
@@ -100,65 +94,65 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
     @d = m/[&?]d\=([^\&\s]*)/;
     @h = m/[&?]h\=([^\&\s]*)/;
     @w = m/[&?]w\=([^\&\s]*)/;
-    $out="http://g-no/safe_image/d=@d&w=@w&h=@h";
+    $out="http://pc-mikrotik/safe_image/d=@d&w=@w&h=@h";
  
-#####
+###
 } elsif ($x=~ m/^https?\:\/\/fbstatic-a\.akamaihd\.net\/safe_image\.php\?d.*/) {
-    $out="http://g-no/safe_image/d=@d&w=@w&h=@h";
-#####
+    $out="http://agunggz/safe_image/d=@d&w=@w&h=@h";
+###
  
 #fbcdn size picture
 } elsif ($x=~ m/^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*x.*\/.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*/) {
-    $out="http://g-no/fbcdn/" . $2;
+    $out="http://pc-mikrotik/fbcdn/" . $2;
  
 #fbcdn picture
 } elsif ($x=~ m/^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*/) {
-    $out="http://g-no/fbcdn/" . $2;
+    $out="http://pc-mikrotik/fbcdn/" . $2;
  
 #reverbnation
 } elsif ($x=~ m/^https?\:\/\/c2lo\.reverbnation\.com\/audio_player\/ec_stream_song\/(.*)\?.*/) {
-    $out="http://g-no/reverbnation/" . $1;
+    $out="http://pc-mikrotik/reverbnation/" . $1;
  
 #playstore
 } elsif ($x=~ m/^https?\:\/\/.*\.c\.android\.clients\.google\.com\/market\/GetBinary\/GetBinary\/(.*\/.*)\?.*/) {
-    $out="http://g-no/android/market/" . $1;
+    $out="http://pc-mikrotik/android/market/" . $1;
  
 #filehost
 } elsif ($x=~ m/^https?\:\/\/.*datafilehost.*\/get\.php.*file\=(.*)/) {
-    $out="http://g-no/filehost/" . $1;
+    $out="http://pc-mikrotik/filehost/" . $1;
  
 #speedtest
 } elsif ($x=~ m/^https?\:\/\/.*(speedtest|espeed).*\/(.*\.(jpg|txt|png|bmp)).*/) {
-    $out="http://g-no/speedtest/" . $2;
+    $out="http://pc-mikrotik/speedtest/" . $2;
  
 #filehippo
 } elsif ($x=~ m/^https?\:\/\/.*\.filehippo\.com\/.*\/(.*\/.*)/) {
-    $out="http://g-no/filehippo/" . $1;
+    $out="http://pc-mikrotik/filehippo/" . $1;
  
 #4shared preview.mp3
 } elsif ($x=~ /^https?\:\/\/.*\.4shared\.com\/.*\/(.*\/.*)\/dlink.*preview.mp3/) {
-    $out="http://g-no/4shared/preview/" . $1;
+    $out="http://pc-mikrotik/4shared/preview/" . $1;
  
 #4shared
 } elsif ($x=~ m/^https?\:\/\/.*\.4shared\.com\/download\/(.*\/.*)\?tsid.*/) {
-    $out="http://g-no/4shared/download/" . $1;
+    $out="http://pc-mikrotik/4shared/download/" . $1;
 
 #steampowered dota 2
 } elsif ($x=~ m/^https?\:\/\/media\d+\.steampowered\.com\/client\/(.*)/) {
-    $out="http://g-no/media/steampowered/" . $1;
+    $out="http://pc-mikrotik/media/steampowered/" . $1;
 
 #steampowered dota2 chunk-manifest
 } elsif ($x=~ m/^https?\:\/\/valve\d+\.cs\.steampowered\.com\/depot\/(.*)/) {
-    $out="http://g-no/steampowered/depot/" . $1;
+    $out="http://pc-mikrotik/steampowered/depot/" . $1;
 
 #animeindo
 } elsif ($x =~ m/^https?\:\/\/.*aisfile\.com:182\/.\/(.*)\/(.*\.(mp4|flv)).*/){
     $out="store-id://aisfile:182.SQUIDINTERNAL/$2\n";
 
-
 #update-mozilla
 } elsif ($x =~ m/^http?\:\/\/.*google\.com\/safebrowsing\/.*/){
     $out="store-id://safebrowsing.SQUIDINTERNAL/$2\n";
+
 
 } else {
 $out=$x;
@@ -170,3 +164,4 @@ if ($X[0] =~ m/^https?\:\/\/.*/) {
         print $X[0] . " " . "OK store-id=$out\n";
 }
 }
+selesai
