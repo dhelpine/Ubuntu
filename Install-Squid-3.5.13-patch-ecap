@@ -207,6 +207,32 @@ cd
 wget http://www.measurement-factory.com/tmp/ecap/ecap_adapter_sample-1.0.0.tar.gz
 tar -xzf ecap_adapter_sample-1.0.0.tar.gz
 cd ecap_adapter_sample-1.0.0/
+_________________________________________________________________________________
+#patch ecap adapter sample
+diff --git a/src/adapter_async.cc b/src/adapter_async.cc
+index 8027700..0b39fa5 100644
+--- a/src/adapter_async.cc
++++ b/src/adapter_async.cc
+@@ -1,41 +1,44 @@
+ #include "sample.h"
+ #include "Debug.h"
+ #include <libecap/common/registry.h>
+ #include <libecap/common/errors.h>
+ #include <libecap/adapter/service.h>
+ #include <libecap/adapter/xaction.h>
+ #include <libecap/host/host.h>
+ #include <libecap/host/xaction.h>
+ #include <assert.h>
+ #include <iostream>
+ #include <list>
++#if HAVE_UNISTD_H
++#include <unistd.h>
++#endif
+ #if HAVE_PTHREAD
+ #include <pthread.h>
+ #endif
+_________________________________________________________________________________
+
 ./configure
 make && make install
 
