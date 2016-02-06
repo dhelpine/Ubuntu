@@ -1,7 +1,14 @@
+# tproxy / transparents setting
 http_port 192.168.21.212:3127 tproxy
-#https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem options=NO_SSLv2,NO_SSLv3,SINGLE_DH_USE dhparams=/etc/squid/ssl_cert/dhparam.pem cipher=EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
-https_port 192.168.21.212:3129 tproxy ssl-bump generate-host-certificates=on dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem options=NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE dhparams=/etc/squid/ssl_cert/dhparam.pem cipher=ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-CHACHA20-POLY1305:EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+aRSA+SHA384:EDH+aRSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA256:EDH+aRSA+SHA256:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
+https_port 192.168.21.212:3129 tproxy \
+     ssl-bump generate-host-certificates=on \
+     dynamic_cert_mem_cache_size=40MB cert=/etc/squid/ssl_cert/myCA.pem \
+     options=NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE \
+     tls-dh=/etc/squid/ssl_cert/dhparam.pem \
+    #cipher=ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-CHACHA20-POLY1305:EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+aRSA+SHA384:EDH+aRSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA256:EDH+aRSA+SHA256:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
+     cipher=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
 
+# yt flash
 acl Android browser -i regexp Android
 acl youtube url_regex -i (youtube|googlevideo|videoplayback).*
 reply_header_access Alternate-Protocol deny all
@@ -9,6 +16,7 @@ request_header_access User-Agent deny youtube !Android
 #request_header_replace User-Agent Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14
 request_header_replace User-Agent Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0) Opera 12.14
 
+# yt lock resolution
 acl ytHack url_regex -i \/pagead\/js\/lidar\.js
 acl ytHack url_regex -i google\.com\/js\/bg\/.*\.js
 #deny_info http://pastebin.com/raw.php?i=NBptAD3B ytHack	#144p
@@ -61,26 +69,32 @@ ssl_bump peek step1 all
 ssl_bump stare step2 all
 ssl_bump splice step3 all
 sslproxy_cert_error allow all
-#dhparams=/etc/squid/ssl_cert/dhparam.pem
-#sslproxy_options NO_SSLv2,NO_SSLv3,SINGLE_DH_USE
-#sslproxy_cipher EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
 sslproxy_flags DONT_VERIFY_PEER
 sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
 sslcrtd_children 50 startup=50
 
-#acl youtube dstdomain .youtube.com
-#url_rewrite_program /etc/squid/phpredir.php
-#url_rewrite_access allow youtube
-#cache deny youtube
+ecap_enable on
+ecap_service gzip_service respmod_precache 0 ecap://www.vigos.com/ecap_gzip
+loadable_modules /usr/local/lib/ecap_adapter_gzip.so
+acl GZIP_HTTP_STATUS http_status 200
+adaptation_access gzip_service allow GZIP_HTTP_STATUS
+
+request_header_access Accept-Encoding deny all
+request_header_replace Accept-Encoding gzip,deflate
+
+request_header_access Vary deny all
+request_header_replace Vary Accept-Encoding
 
 acl store_rewrite_list urlpath_regex \/(get_video\?|videodownload\?|videoplayback.*id)
-
 acl rewritedoms dstdomain .dailymotion.com .video-http.media-imdb.com .dl.sourceforge.net .prod.video.msn.com .fbcdn.net .akamaihd.net vl.mccont.com .mais.uol.com.br .streaming.r7.com
 acl yt url_regex -i googlevideo.*videoplayback
-acl gmaps url_regex -i ^https?:\/\/(khms|mt)[0-9]+\.google\.[a-z\.]+\/.*
-acl ttv url_regex -i terratv
-acl globo url_regex -i ^http:\/\/voddownload[0-9]+\.globo\.com.*
-acl dm url_regex -i dailymotion\-flv2
+acl yt url_regex -i (googlevideo|youtube)\.com/videoplayback\?
+acl yt url_regex -i (ytimg|googlevideo|youtube).com:443$
+acl yt url_regex -i googlevideo\.com/crossdomain\.xml
+acl yt url_regex -i youtube\.com/(watch\?|((get|api)\_video\_info|embed|v/))
+acl yt url_regex -i (doubleclick|google)(.*?)pagead/|(google|pubads)(.*?)ads
+acl yt url_regex -i ad.doubleclick.net|youtube.com/api/stats/
+acl yt url_regex -i youtube.com/annotations_invideo
 
 acl helper url_regex -i ^https?\:\/\/.*
 acl httptomiss http_status 302
@@ -97,10 +111,6 @@ store_id_access deny !getmethod
 store_id_access allow store_rewrite_list
 store_id_access allow rewritedoms
 store_id_access allow yt
-store_id_access allow gmaps
-store_id_access allow ttv
-store_id_access allow globo
-store_id_access allow dm
 store_id_access allow helper
 store_id_access deny all
 
