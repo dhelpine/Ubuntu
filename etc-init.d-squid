@@ -1,12 +1,12 @@
-$ cat > /etc/init.d/squid <<-'finis'
+cat > /etc/init.d/squid <<-'finis'
 #!/bin/sh
 #
 # squid32012                Startup script for the SQUID HTTP proxy-cache.
 #
-# Version:      @(#)squid3.rc  1.0  07-Jul-2006  kalpin@debian.org
+# Version:      @(#)squid3.rc  1.0  05-Feb-2016  kalpin@debian.org
 #
 ### BEGIN INIT INFO
-# Provides:          Squid 3.5.7
+# Provides:          Squid 3.5.13
 # File-Location:     /etc/init.d/squid
 # Required-Start:    $network $remote_fs $syslog
 # Required-Stop:     $network $remote_fs $syslog
@@ -14,11 +14,11 @@ $ cat > /etc/init.d/squid <<-'finis'
 # Should-Stop:       $named
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Squid HTTP Proxy version 3.5.7
+# Short-Description: Squid HTTP Proxy version 3.5.13
 ### END INIT INFO
 
 NAME=squid
-DESC="Squid HTTP Proxy 3.5.7 imxpert.co"
+DESC="Squid HTTP Proxy 3.5.13 imxpert.co"
 DAEMON=/usr/sbin/squid
 PIDFILE=/var/run/$NAME.pid
 CONFIG=/etc/squid/squid.conf
