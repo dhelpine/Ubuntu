@@ -302,7 +302,15 @@ ________________________________________________________________________________
          NID_basic_constraints,
          0
 ______________________________________________________________________________________
-
+--- src/ip/tools.cc
+#else
+debugs(3, 2, "IPv6 transport " << (EnableIpv6?"Available":"Disabled"));
+if (EnableIpv6 != IPV6_OFF) {
+       debugs(3, DBG_CRITICAL, "WARNING: BCP 177 violation. IPv6 transport forced OFF by build parameters.");
+       EnableIpv6 = IPV6_OFF;
+}
+#endif
+______________________________________________________________________________________
 
 ./configure '--prefix=/usr' '--bindir=/usr/bin' '--sbindir=/usr/sbin' '--libexecdir=/usr/lib/squid' '--sysconfdir=/etc/squid' '--localstatedir=/var' '--libdir=/usr/lib' '--includedir=/usr/include' '--datadir=/usr/share/squid' '--infodir=/usr/share/info' '--mandir=/usr/share/man' '--disable-dependency-tracking' '--disable-strict-error-checking' '--enable-async-io=48' '--with-aufs-threads=48' '--with-pthreads' '--with-openssl' '--enable-storeio=aufs,diskd' '--enable-removal-policies=lru,heap' '--with-aio' '--with-dl' '--enable-icmp' '--enable-esi' '--enable-icap-client' '--disable-wccp' '--disable-wccpv2' '--enable-kill-parent-hack' '--enable-cache-digests' '--disable-select' '--enable-http-violations' '--enable-linux-netfilter' '--enable-follow-x-forwarded-for' '--disable-ident-lookups' '--enable-x-accelerator-vary' '--enable-zph-qos' '--with-default-user=proxy' '--with-logdir=/var/log/squid' '--with-pidfile=/var/run/squid.pid' '--with-swapdir=/var/spool/squid' '--with-large-files' '--enable-ltdl-convenience' '--with-filedescriptors=65536' '--enable-ssl' '--enable-ssl-crtd' '--enable-ecap' '--disable-auth' '--disable-ipv6' '--enable-err-languages=English' '--enable-default-err-language=English' '--build=x86_64' 'build_alias=x86_64'
 make && makeinstall
