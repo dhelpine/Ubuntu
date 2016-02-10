@@ -185,8 +185,14 @@ ulimit -Sn 65535">> /etc/profile
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install gcc build-essential fakeroot libcap-dev libssl-dev ccze devscripts openssl libcppunit-dev libsasl2-dev cdbs ebtables bridge-utils libcap2 libcap2-dev libtool
+apt-get -y install gcc build-essential apache2 fakeroot libcap-dev libssl-dev ccze devscripts openssl libcppunit-dev libsasl2-dev cdbs ebtables bridge-utils libcap2 libcap2-dev libtool
+apt-get install sarg
 
+rm -rf /etc/apache2/ports.conf
+cd /etc/apache2
+wget http://www.rapani-id.com/ubuntu/ports.zip && unzip ports.zip
+cd /var/www/html
+rm -rf /var/www/html
 
 curl http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.tar.gz -o pkgconfig.tgz
 tar -zxf pkgconfig.tgz
