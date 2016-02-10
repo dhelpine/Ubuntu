@@ -185,14 +185,7 @@ ulimit -Sn 65535">> /etc/profile
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install gcc build-essential apache2 fakeroot libcap-dev libssl-dev ccze devscripts openssl libcppunit-dev libsasl2-dev cdbs ebtables bridge-utils libcap2 libcap2-dev libtool
-apt-get install sarg
-
-rm -rf /etc/apache2/ports.conf
-cd /etc/apache2
-wget http://www.rapani-id.com/ubuntu/ports.zip && unzip ports.zip
-cd /var/www/html
-rm -rf /var/www/html
+apt-get -y install gcc build-essential sarg apache2 fakeroot libcap-dev libssl-dev ccze devscripts openssl libcppunit-dev libsasl2-dev cdbs ebtables bridge-utils libcap2 libcap2-dev libtool
 
 curl http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.tar.gz -o pkgconfig.tgz
 tar -zxf pkgconfig.tgz
@@ -987,6 +980,13 @@ update-rc.d -f squid defaults
 mkdir -p /var/log/squid
 chown -R proxy.proxy /var/log/squid*
 chmod 4755 /usr/lib/squid/pinger
+
+sudo cp /etc/sarg/sarg.conf /etc/sarg/sarg.conf.old
+sudo cat /etc/sarg/sarg.conf.old | grep -v ^# | grep -v ^$> /etc/sarg/sarg.conf
+nano /etc/sarg/sarg.conf
+sudo ln -sv /var/lib/sarg/ /var/www/
+sudo sarg-reports today
+
 squid -k parse
 squid -k check
 squid -z
