@@ -151,7 +151,15 @@ if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
 
 #update-mozilla
 } elsif ($x =~ m/^http?\:\/\/.*google\.com\/safebrowsing\/.*/){
-    $out="store-id://safebrowsing.SQUIDINTERNAL/$2\n";
+    $out="http://pc-mikrotik/safebrowsing/$2\n";
+
+#vimeo-cdn
+} elsif ($x =~ m/^https:\/\/.*vimeocdn\.com\/(.*)\/(.*\.(mp4|m4s))/){
+    $out="http://pc-mikrotik/vimeo/$2\n";
+
+#vimeo-akamaihd
+} elsif ($x =~ m/^https:\/\/(skyfiregce-a\.akamaihd\.net)\/(.*\/.*)\/(video)\/(.*\.m4s|mp4)/){
+    $out="http://pc-mikrotik/akamaihd/$2\n";
 
 
 } else {
