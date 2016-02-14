@@ -1,0 +1,631 @@
+# Tuning File Limit
+echo 65536 > /proc/sys/fs/file-max
+echo "	# (root   -  nofile   65536)
+	# /etc/security/limits.conf
+	*               hard    nofile          65536
+	*               soft    nofile          65536
+	proxy           soft    nofile          65536
+	proxy           hard    nofile          65536
+	squid           soft    nofile          65536
+	squid           hard    nofile          65536
+	root            soft    nofile          65536
+	root            hard    nofile          65536
+	*               soft    nproc           65536
+	*               hard    nproc           65536" > /etc/security/limits.conf
+
+echo "session required        pam_limits.so" >> /etc/pam.d/common-session
+
+
+echo "ip_conntrack
+ip_tables
+ip_conntrack_ftp
+ip_conntrack_irc
+iptable_nat
+ip_nat_ftp
+xt_TPROXY
+xt_socket
+xt_mark
+nf_nat
+nf_conntrack_ipv4
+nf_conntrack
+nf_defrag_ipv4
+ipt_REDIRECT"> /etc/modules
+
+
+# Tuning Parameter Kernel
+echo 4 >> /proc/sys/net/ipv4/tcp_fin_timeout
+mv /etc/sysctl.conf /etc/sysctl.conf_
+touch /etc/sysctl.conf
+
+echo "kernel.panic = 30
+kernel.panic_on_oops = 30
+kernel.sysrq = 0
+kernel.core_uses_pid = 1
+kernel.msgmnb = 65536
+kernel.msgmax = 65536
+fs.file-max = 65536
+vm.swappiness = 5
+vm.vfs_cache_pressure=50
+vm.mmap_min_addr = 4096
+vm.overcommit_ratio = 0
+vm.overcommit_memory = 0
+kernel.shmmax = 268435456
+kernel.shmall = 268435456
+vm.min_free_kbytes = 65536
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 5
+net.ipv4.tcp_synack_retries = 2
+net.ipv4.tcp_max_syn_backlog = 4096
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.forwarding = 1
+net.ipv4.conf.default.forwarding = 1
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+net.ipv4.conf.eth0.rp_filter = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.log_martians = 0
+net.ipv4.conf.default.log_martians = 0
+net.ipv4.tcp_fin_timeout = 15
+net.ipv4.tcp_keepalive_time = 300
+net.ipv4.tcp_keepalive_probes = 5
+net.ipv4.tcp_keepalive_intvl = 15
+net.ipv4.conf.all.bootp_relay = 0
+net.ipv4.conf.all.proxy_arp = 0
+net.ipv4.tcp_dsack = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_fack = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.icmp_echo_ignore_all = 0
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.ip_local_port_range = 1024 65535
+net.ipv4.tcp_rfc1337 = 1
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_mem = 65536 131072 262144
+net.ipv4.udp_mem = 65536 131072 262144
+net.ipv4.tcp_rmem = 8192 87380 16777216
+net.ipv4.udp_rmem_min = 16384
+net.core.rmem_default = 87380
+net.core.rmem_max = 16777216
+net.ipv4.tcp_wmem = 8192 65536 16777216
+net.ipv4.udp_wmem_min = 16384
+net.core.wmem_default = 65536
+net.core.wmem_max = 16777216
+net.core.somaxconn = 32768
+net.core.netdev_max_backlog = 4096
+net.core.dev_weight = 64
+net.core.optmem_max = 65536
+net.ipv4.tcp_max_tw_buckets = 1440000
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_max_orphans = 16384
+net.ipv4.tcp_orphan_retries = 0
+net.ipv4.ipfrag_high_thresh = 512000
+net.ipv4.ipfrag_low_thresh = 446464
+net.ipv4.tcp_no_metrics_save = 1
+net.ipv4.tcp_moderate_rcvbuf = 1
+net.unix.max_dgram_qlen = 50
+net.ipv4.neigh.default.gc_thresh3 = 2048
+net.ipv4.neigh.default.gc_thresh2 = 1024
+net.ipv4.neigh.default.gc_thresh1 = 32
+net.ipv4.neigh.default.gc_interval = 30
+net.ipv4.neigh.default.proxy_qlen = 96
+net.ipv4.neigh.default.unres_qlen = 6
+net.ipv4.tcp_ecn = 1
+net.ipv4.tcp_reordering = 3
+net.ipv4.tcp_retries2 = 15
+net.ipv4.tcp_retries1 = 3" > /etc/sysctl.conf
+
+# Set iproute dan iptables untuk tproxy
+
+mv /etc/rc.local /etc/rc.local_
+touch /etc/rc.local
+
+echo "#!/bin/sh
+#
+# This script will be executed *after* all the other init scripts.
+# You can put your own initialization stuff in here if you don't
+# want to do the full Sys V style init stuff.
+
+ 
+modprobe xt_TPROXY
+modprobe xt_socket
+modprobe xt_mark
+modprobe nf_nat
+modprobe nf_conntrack_ipv4
+modprobe nf_conntrack
+modprobe nf_defrag_ipv4
+modprobe ipt_REDIRECT
+modprobe iptable_nat
+ 
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -t nat -F
+iptables -t mangle -N DIVERT
+iptables -t mangle -A DIVERT -j MARK --set-mark 1
+iptables -t mangle -A DIVERT -j ACCEPT
+iptables -t mangle -A INPUT -j ACCEPT
+iptables -t mangle -A PREROUTING -p tcp -m socket -j DIVERT
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 80 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 5050 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8080 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 88 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 182 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8081 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 8777 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3127
+iptables -t mangle -A PREROUTING ! -d 192.168.21.212/24 -p tcp --dport 443 -j TPROXY --tproxy-mark 0x1/0x1 --on-port 3129
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 80 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 5050 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 8080 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 88 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 182 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8081 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/24 -p tcp --dport 8777 -j ACCEPT
+iptables -t mangle -A PREROUTING -d 192.168.21.212/32 -p tcp --dport 443 -j ACCEPT
+ 
+/sbin/ip rule add fwmark 1 lookup 100
+/sbin/ip route add local 0.0.0.0/0 dev lo table 100
+ 
+sysctl net.ipv4.ip_nonlocal_bind=1
+sysctl net.ipv4.ip_forward=1
+ 
+echo 0 > /proc/sys/net/ipv4/conf/lo/rp_filter
+echo 1 > /proc/sys/net/ipv4/ip_forward
+exit 0" > /etc/rc.local
+
+# Set Maksimum Ulimit
+echo "ulimit -Hn 65536
+ulimit -Sn 65535">> /etc/profile
+
+
+apt-get update
+
+apt-get -y install gcc build-essential fakeroot libcap-dev libssl-dev ccze devscripts openssl libcppunit-dev libsasl2-dev cdbs ebtables bridge-utils libcap2 libcap2-dev libtool
+
+apt-get upgrade -y
+
+# Instalasi & Kompilasi Squid
+
+wget -c ftp://artfiles.org/squid-cache.org/pub/archive/3.5/squid-3.5.13.tar.bz2
+tar -xvf squid-3.5.13.tar.bz2
+cd squid-3.5.13
+
+./configure '--prefix=/usr' '--bindir=/usr/bin' '--sbindir=/usr/sbin' '--libexecdir=/usr/lib/squid' '--sysconfdir=/etc/squid' '--localstatedir=/var' '--libdir=/usr/lib' '--includedir=/usr/include' '--datadir=/usr/share/squid' '--infodir=/usr/share/info' '--mandir=/usr/share/man' '--disable-dependency-tracking' '--disable-strict-error-checking' '--enable-async-io=48' '--with-aufs-threads=48' '--with-pthreads' '--with-openssl' '--enable-storeio=aufs,diskd' '--enable-removal-policies=lru,heap' '--with-aio' '--with-dl' '--enable-icmp' '--enable-esi' '--enable-icap-client' '--disable-wccp' '--disable-wccpv2' '--enable-kill-parent-hack' '--enable-cache-digests' '--disable-select' '--enable-http-violations' '--enable-linux-netfilter' '--enable-follow-x-forwarded-for' '--disable-ident-lookups' '--enable-x-accelerator-vary' '--enable-zph-qos' '--with-default-user=proxy' '--with-logdir=/tmp' '--with-pidfile=/var/run/squid.pid' '--with-swapdir=/var/spool/squid' '--with-large-files' '--enable-ltdl-convenience' '--with-filedescriptors=65536' '--enable-ssl' '--enable-ssl-crtd' '--disable-auth' '--disable-ipv6' '--enable-err-languages=English' '--enable-default-err-language=English' '--build=x86_64' 'build_alias=x86_64'
+
+make && make install
+
+cd
+mkdir -p /var/squid/ssl_db
+/usr/lib/squid/ssl_crtd -c -s /var/squid/ssl_db/certs
+chown -R proxy:proxy /var/squid/ssl_db/certs
+mkdir -p /etc/squid/ssl_cert
+
+# Set konfigurasi squid.conf, silahkan disesuaikan
+
+
+# Konfigurasi spliceserver
+touch /etc/squid/splices.txt
+
+echo "
+ib.bri.co.id
+95.211.61.134
+74.82.91.84
+110.92.28.161
+94.236.124.241
+94.236.46.101
+
+ib.bankmandiri.co.id
+117.102.111.38
+114.57.160.206
+112.215.62.232
+
+#GCA
+203.117.172.0/24
+203.117.172.5
+
+web.cdn.garenanow.com
+54.230.100.0/22
+54.230.88.0/22
+54.240.192.0/22
+54.192.52.0/22
+54.192.54.92
+54.192.54.110
+54.192.54.193
+54.192.54.227
+54.192.54.81
+54.192.54.221
+54.192.54.71
+54.192.54.80
+52.84.7.204
+52.84.7.228
+52.84.7.153
+52.84.7.137
+202.73.22.3
+
+#fifa-garena
+103.248.57.10
+103.248.57.140
+103.248.57.190
+
+s65.kumpulbagi.com
+119.81.101.170
+
+static.socialpointgames.com
+37.48.88.
+
+#playstore
+216.58.219.238
+216.58.219.225
+118.98.111.204
+118.98.111.206
+
+#captcha
+216.239.38.120
+216.58.219.195
+
+#bbm
+74.82.88.132
+74.82.73.229
+
+#smartbilling
+203.89.146.67
+
+#whatsapp
+174.37.243.85
+ " /etc/squid/splices.txt
+
+# Konfigurasi rewriter Storeid
+cat > /etc/squid/storeid.pl <<- 'selesai'
+#!/usr/bin/perl
+ 
+$|=1;
+while (<>) {
+@X = split;
+if ($X[0] =~ m/^https?\:\/\/.*/) {
+        $x = $X[0];
+        $_ = $X[0];
+        $u = $X[0];
+} else {
+        $x = $X[1];
+        $_ = $X[1];
+        $u = $X[1];
+}
+ 
+ 
+#ads youtube
+if ($x=~ m/^https?\:\/\/.*youtube.*api.*stats.*ads.*/){
+    @content_v = m/[&?]content_v\=([^\&\s]*)/;
+    @cpn = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
+    unless (-e "/tmp/@cpn"){
+    open FILE, ">/tmp/@cpn";
+    print FILE "id=@content_v";
+    close FILE;
+    }
+    $out=$x;
+ 
+#tracking youtube
+} elsif ($x=~ m/^https?\:\/\/.*youtube.*(ptracking|set_awesome).*/){
+    @video_id = m/[&?]video_id\=([^\&\s]*)/;
+    @cpn = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
+    unless (-e "/tmp/@cpn"){
+    open FILE, ">/tmp/@cpn";
+    print FILE "id=@video_id";
+    close FILE;
+    }
+    $out=$x;
+ 
+ 
+#stream_204 youtube
+} elsif ($x=~ m/^https?\:\/\/.*youtube.*(stream_204|watchtime|qoe|atr).*/){
+    @docid = m/[&?]docid\=([^\&\s]*)/;
+    @cpn = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
+    unless (-e "/tmp/@cpn"){
+    open FILE, ">/tmp/@cpn";
+    print FILE "id=@docid";
+    close FILE;
+    }
+    $out=$x;
+ 
+#player_204 youtube
+} elsif ($x=~ m/^https?\:\/\/.*youtube.*player_204.*/){
+    @v = m/[&?]v\=([^\&\s]*)/;
+    @cpn = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
+    unless (-e "/tmp/@cpn"){
+    open FILE, ">/tmp/@cpn";
+    print FILE "id=@v";
+    close FILE;
+    }
+    $out=$x;
+ 
+#youtube
+} elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*title.*/){
+    @title      = m/[%&?\/](title[%&=\/][^\&\s\/]*)/;
+    @itag      = m/[%&?\/](itag[%&=\/][^\&\s\/]*)/;
+    @range   = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
+    $out="http://pc-mikrotik/youtube/@itag@title@range";
+
+#youtube
+} elsif ($x=~ m/^https?\:\/\/.*(youtube|googlevideo).*videoplayback.*/){
+    @cpn      = m/[%&?\/](cpn[%&=\/][^\&\s\/]*)/;
+    @id      = m/[%&?\/](id[%&=\/][^\&\s\/]*)/;
+    @itag      = m/[%&?\/](itag[%&=\/][^\&\s\/]*)/;
+    @range  = m/[%&?\/](range[%&=\/][^\&\s\/]*)/;
+    @slices = m/[%&?\/](slices[%&=\/][^\&\s\/]*)/;
+    @mime     = m/[%&?\/](mime[%&=\/][^\&\s\/]*)/;
+    if (defined(@cpn[0])){
+        if (-e "/tmp/@cpn"){
+        open FILE, "/tmp/@cpn";
+        @id = <FILE>;
+        close FILE;}
+    }
+    $out="http://pc-mikrotik/youtube/@id@itag@mime@range@slices";
+ 
+ 
+#utmgif
+} elsif ($x=~ m/^https?\:\/\/.*utm.gif.*/) {
+    $out="http://pc-mikrotik/__utm.gif";
+ 
+ 
+#safe_image FB
+} elsif ($x=~ m/^https?\:\/\/fbexternal-a\.akamaihd\.net\/safe_image\.php\?d.*/) {
+    @d = m/[&?]d\=([^\&\s]*)/;
+    @h = m/[&?]h\=([^\&\s]*)/;
+    @w = m/[&?]w\=([^\&\s]*)/;
+    $out="http://pc-mikrotik/safe_image/d=@d&w=@w&h=@h";
+ 
+###
+} elsif ($x=~ m/^https?\:\/\/fbstatic-a\.akamaihd\.net\/safe_image\.php\?d.*/) {
+    $out="http://agunggz/safe_image/d=@d&w=@w&h=@h";
+###
+ 
+#fbcdn size picture
+} elsif ($x=~ m/^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*x.*\/.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*/) {
+    $out="http://pc-mikrotik/fbcdn/" . $2;
+ 
+#fbcdn picture
+} elsif ($x=~ m/^https?\:\/\/.*(fbcdn).*\/v\/.*\/(.*\.(jpg|jpeg|bmp|ico|png|gif))\?oh=\.*/) {
+    $out="http://pc-mikrotik/fbcdn/" . $2;
+ 
+#reverbnation
+} elsif ($x=~ m/^https?\:\/\/c2lo\.reverbnation\.com\/audio_player\/ec_stream_song\/(.*)\?.*/) {
+    $out="http://pc-mikrotik/reverbnation/" . $1;
+ 
+#playstore
+} elsif ($x=~ m/^https?\:\/\/.*\.c\.android\.clients\.google\.com\/market\/GetBinary\/GetBinary\/(.*\/.*)\?.*/) {
+    $out="http://pc-mikrotik/android/market/" . $1;
+ 
+#filehost
+} elsif ($x=~ m/^https?\:\/\/.*datafilehost.*\/get\.php.*file\=(.*)/) {
+    $out="http://pc-mikrotik/filehost/" . $1;
+ 
+#speedtest
+} elsif ($x=~ m/^https?\:\/\/.*(speedtest|espeed).*\/(.*\.(jpg|txt|png|bmp)).*/) {
+    $out="http://pc-mikrotik/speedtest/" . $2;
+ 
+#filehippo
+} elsif ($x=~ m/^https?\:\/\/.*\.filehippo\.com\/.*\/(.*\/.*)/) {
+    $out="http://pc-mikrotik/filehippo/" . $1;
+ 
+#4shared preview.mp3
+} elsif ($x=~ /^https?\:\/\/.*\.4shared\.com\/.*\/(.*\/.*)\/dlink.*preview.mp3/) {
+    $out="http://pc-mikrotik/4shared/preview/" . $1;
+ 
+#4shared
+} elsif ($x=~ m/^https?\:\/\/.*\.4shared\.com\/download\/(.*\/.*)\?tsid.*/) {
+    $out="http://pc-mikrotik/4shared/download/" . $1;
+
+#steampowered dota 2
+} elsif ($x=~ m/^https?\:\/\/media\d+\.steampowered\.com\/client\/(.*)/) {
+    $out="http://pc-mikrotik/media/steampowered/" . $1;
+
+#steampowered dota2 chunk-manifest
+} elsif ($x=~ m/^https?\:\/\/valve\d+\.cs\.steampowered\.com\/depot\/(.*)/) {
+    $out="http://pc-mikrotik/steampowered/depot/" . $1;
+
+#animeindo
+} elsif ($x =~ m/^https?\:\/\/.*aisfile\.com:182\/.\/(.*)\/(.*\.(mp4|flv)).*/){
+    $out="store-id://aisfile:182.SQUIDINTERNAL/$2\n";
+
+#update-mozilla
+} elsif ($x =~ m/^http?\:\/\/.*google\.com\/safebrowsing\/.*/){
+    $out="store-id://safebrowsing.SQUIDINTERNAL/$2\n";
+
+
+} else {
+$out=$x;
+}
+ 
+if ($X[0] =~ m/^https?\:\/\/.*/) {
+        print "OK store-id=$out\n";
+} else {
+        print $X[0] . " " . "OK store-id=$out\n";
+}
+}
+selesai
+
+
+# Konfigurasi Startup Service Squid
+cat > /etc/init.d/squid <<-'finis'
+#!/bin/sh
+#
+# squid32012                Startup script for the SQUID HTTP proxy-cache.
+#
+# Version:      @(#)squid3.rc  1.0  05-Feb-2016  kalpin@debian.org
+#
+### BEGIN INIT INFO
+# Provides:          Squid 3.5.13
+# File-Location:     /etc/init.d/squid
+# Required-Start:    $network $remote_fs $syslog
+# Required-Stop:     $network $remote_fs $syslog
+# Should-Start:      $named
+# Should-Stop:       $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Squid HTTP Proxy version 3.5.13
+### END INIT INFO
+
+NAME=squid
+DESC="Squid HTTP Proxy 3.5.13 imxpert.co"
+DAEMON=/usr/sbin/squid
+PIDFILE=/var/run/$NAME.pid
+CONFIG=/etc/squid/squid.conf
+SQUID_ARGS="-YC -f $CONFIG"
+# RAMFS=/scripts/ramcache
+
+[ ! -f /etc/default/squid ] || . /etc/default/squid
+
+. /lib/lsb/init-functions
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+[ -x $DAEMON ] || exit 0
+
+ulimit -n 65535
+
+find_cache_dir () {
+        w="     " # space tab
+        res=`sed -ne '
+                s/^'$1'['"$w"']\+[^'"$w"']\+['"$w"']\+\([^'"$w"']\+\).*$/\1/p;
+                t end;
+                d;
+                :end q' < $CONFIG`
+        [ -n "$res" ] || res=$2
+        echo "$res"
+}
+
+find_cache_type () {
+        w="     " # space tab
+        res=`sed -ne '
+                s/^'$1'['"$w"']\+\([^'"$w"']\+\).*$/\1/p;
+                t end;
+                d;
+                :end q' < $CONFIG`
+        [ -n "$res" ] || res=$2
+        echo "$res"
+}
+
+start () {
+#        $RAMFS clean
+#        $RAMFS mount
+#        $RAMFS restore
+
+        cache_dir=`find_cache_dir cache_dir /cache`
+        cache_type=`find_cache_type cache_dir aufs`
+
+        #
+    # Create spool dirs if they don't exist.
+    #
+        if [ "$cache_type" = "coss" -a -d "$cache_dir" -a ! -f "$cache_dir/stripe" ] || [ "$cache_type" != "coss" -a -d "$cache_dir" -a ! -d "$cache_dir/00" ]
+        then
+                log_warning_msg "Creating $DESC cache structure"
+                $DAEMON -z
+        fi
+
+        umask 027
+        ulimit -n 65535
+
+        cd $cache_dir
+        start-stop-daemon --quiet --start \
+                --pidfile $PIDFILE \
+                --exec $DAEMON -- $SQUID_ARGS < /dev/null
+        return $?
+}
+
+stop () {
+
+        PID=`cat $PIDFILE 2>/dev/null`
+        start-stop-daemon --stop --quiet --pidfile $PIDFILE --exec $DAEMON
+        #
+        #       Now we have to wait until squid has _really_ stopped.
+        #
+        sleep 2
+        if test -n "$PID" && kill -0 $PID 2>/dev/null
+        then
+                log_action_begin_msg " Waiting"
+                cnt=0
+                while kill -0 $PID 2>/dev/null
+                do
+                        cnt=`expr $cnt + 1`
+                        if [ $cnt -gt 24 ]
+                        then
+                                log_action_end_msg 1
+                                return 1
+                        fi
+                        sleep 5
+                        log_action_cont_msg ""
+                done
+                log_action_end_msg 0
+                return 0
+        else
+                return 0
+        fi
+}
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" "$NAME"
+        if start ; then
+                log_end_msg $?
+        else
+                log_end_msg $?
+        fi
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" "$NAME"
+
+
+        if stop ; then
+                log_end_msg $?
+        else
+                log_end_msg $?
+        fi
+#        $RAMFS dump
+#        $RAMFS umount
+#        $RAMFS clean
+
+        ;;
+    reload|force-reload)
+        log_action_msg "Reloading $DESC configuration files"
+        start-stop-daemon --stop --signal 1 \
+                --pidfile $PIDFILE --quiet --exec $DAEMON
+        log_action_end_msg 0
+        ;;
+    restart)
+        log_daemon_msg "Restarting $DESC" "$NAME"
+        stop
+        if start ; then
+                log_end_msg $?
+        else
+                log_end_msg $?
+        fi
+        ;;
+    *)
+        echo "Usage: /etc/init.d/$NAME {start|stop|reload|force-reload|restart}"
+        exit 3
+        ;;
+esac
+exit 0
+finis
+
+
+# Set Permission dan restart daemon Squid
+mkdir -p /cache
+chown -R proxy.proxy /cache
+chmod -R 777 /cache
+chmod +x /etc/rc.local
+chmod +x /etc/squid/storeid.pl
+chmod +x /etc/init.d/squid
+update-rc.d -f squid defaults
+/etc/init.d/squid stop
+mkdir -p /var/log/squid
+chown -R proxy.proxy /var/log/squid*
+
+squid -k parse
+squid -z
+squid -Nd1
+squid -k check
+reboot
