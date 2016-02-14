@@ -9,7 +9,7 @@ http_port 192.168.21.212:3127 tproxy
 https_port 192.168.21.212:3129 tproxy ssl-bump cert=/etc/squid/ssl_cert/myCA.pem \
    generate-host-certificates=on dynamic_cert_mem_cache_size=40MB \
    sslflags=DELAYED_AUTH tls-dh=/etc/squid/ssl_cert/dhparam.pem \
-   options=NO_SSLv2,NO_SSLv3 \
+   options=NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE \
    cipher=ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:DHE-RSA-CAMELLIA128-SHA:AES128-SHA:RC4-SHA:HIGH:!aNULL:!MD5:!ADH
    
 #----------------------------------------------#
@@ -146,7 +146,9 @@ ssl_bump peek step1
 ssl_bump bump step2
 ssl_bump splice step3
 sslproxy_cert_error allow all
-sslproxy_flags DONT_VERIFY_PEER
+sslproxy_flags DONT_VERIFY_PEER,NO_DEFAULT_CA
+sslproxy_options NO_SSLv2,NO_SSLv3,No_Compression,SINGLE_DH_USE,SINGLE_ECDH_USE,CIPHER_SERVER_PREFERENCE
+sslproxy_cipher ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:DHE-RSA-CAMELLIA128-SHA:AES128-SHA:RC4-SHA:HIGH:!aNULL:!MD5:!ADH
 sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
 sslcrtd_children 50 startup=50
 
@@ -215,7 +217,7 @@ strip_query_terms off
 
 reload_into_ims on
 refresh_all_ims on
-vary_ignore_expire on
+#vary_ignore_expire on
 
 cache_swap_high 99
 cache_swap_low 98
