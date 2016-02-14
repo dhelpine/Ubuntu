@@ -1,0 +1,259 @@
+#----------------------------------------------#
+# SQUID-3.5.x - Performance Configuration
+# Customize by Agung
+#----------------------------------------------#
+# TPROXY
+# ---------------------------------------------#
+http_port 192.168.21.212:3128
+http_port 192.168.21.212:3127 tproxy
+https_port 192.168.21.212:3129 tproxy ssl-bump cert=/etc/squid/ssl_cert/myCA.pem \
+   generate-host-certificates=on dynamic_cert_mem_cache_size=40MB \
+   sslflags=DELAYED_AUTH tls-dh=/etc/squid/ssl_cert/dhparam.pem \
+   options=NO_SSLv2,NO_SSLv3 \
+   cipher=ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:DHE-RSA-CAMELLIA128-SHA:AES128-SHA:RC4-SHA:HIGH:!aNULL:!MD5:!ADH
+   
+#----------------------------------------------#
+# ACLs PARAMETERS
+#----------------------------------------------#
+acl localnet src 10.0.0.0/8		# RFC1918 possible internal network
+acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
+acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
+
+acl within_timeframe time MTWHFAS 00:00-24:00
+
+acl all src
+acl SSL_ports port 443 # https
+acl SSL_ports port 563 # snews
+acl Safe_ports port 21 # ftp
+acl Safe_ports port 70 # gopher
+acl Safe_ports port 80 # http
+acl Safe_ports port 88 # kerberos
+acl Safe_ports port 182 # streaming
+acl Safe_ports port 210 # wais
+acl Safe_ports port 280 # http-mgmt
+acl Safe_ports port 443 # https
+acl Safe_ports port 488 # gss-http
+acl Safe_ports port 563 # snews
+acl Safe_ports port 591 # filemaker
+acl Safe_ports port 777 # multiling http
+acl Safe_ports port 1025-65535 # unregistered ports
+acl Safe_ports port 3128 # Squids port (for icons)
+acl CONNECT method CONNECT
+
+acl partial_206 url_regex -i ^https:\/\/.*vimeocdn\.com\/(.*)\/(.*\.(mp4)).*
+
+acl Android browser -i regexp Android
+acl youtube url_regex -i (youtube|googlevideo|videoplayback).*
+
+acl ytHack url_regex -i \/pagead\/js\/lidar\.js
+acl ytHack url_regex -i google\.com\/js\/bg\/.*\.js
+
+acl chrome url_regex -i ^http:\/\/.*\.pack.google.com\/edgedl\/chrome\/win\/.*
+acl chrome url_regex -i ^http:\/\/cache.pack.google.com\/edgedl\/.*
+acl chrome url_regex -i ^http:\/\/www.google.com\/dl\/chrome\/win\/.*
+
+acl tostoreid url_regex -i ^https?\:\/\/.*youtube.*(content_v|docid|video_id|player_204.*v\=).*
+acl tostoreid url_regex -i ^https?\:\/\/.*youtube.*api.*stats.*ads.*
+acl tostoreid url_regex -i ^https?\:\/\/.*youtube.*(ptracking|set_awesome|stream_204|watchtime|qoe|atr|player_204).*
+acl tostoreid url_regex -i ^https?\:\/\/.*googlevideo.*videoplayback.*
+acl tostoreid url_regex -i ^https?\:\/\/.*(fbcdn|akamaihd).*
+acl tostoreid url_regex -i ^https?\:\/\/c2lo\.reverbnation\.com\/audio_player\/ec_stream_song\/(.*)\?.*
+acl tostoreid url_regex -i ^https?\:\/\/.*\.c\.android\.clients\.google\.com\/market\/GetBinary\/GetBinary\/(.*\/.*)\?.*
+acl tostoreid url_regex -i ^https?\:\/\/.*datafilehost.*\/get\.php.*file\=(.*)
+acl tostoreid url_regex -i ^https?\:\/\/.*(speedtest|espeed).*\/(.*\.(jpg|txt|png|bmp)).*
+acl tostoreid url_regex -i ^https?\:\/\/.*\.filehippo\.com\/.*\/(.*\/.*)
+acl tostoreid url_regex -i ^https?\:\/\/.*\.4shared\.com\/.*\/(.*\/.*)\/dlink.*preview.mp3
+acl tostoreid url_regex -i ^https?\:\/\/.*\.4shared\.com\/download\/(.*\/.*)\?tsid.*
+acl tostoreid url_regex -i ^https?\:\/\/.*steampowered.*\/(client|depot)\/(.*)\?.*
+acl tostoreid url_regex -i ^https?\:\/\/.*steampowered.*\/(client|depot)\/(.*)
+acl tostoreid url_regex -i ^https?:\/\/www\.savefile\.co\:182\/.*\/(.*\.(mp4|flv|3gp)).*
+acl tostoreid url_regex -i ^https?:\/\/video\-http\.media\-imdb\.com\/(.*\.mp4)\?.*
+acl tostoreid url_regex -i ^https?\:\/\/.*\.dl\.sourceforge\.net\/.*
+acl tostoreid url_regex -i ^https:\/\/.*vimeocdn\.com\/(.*)\/(.*\.(mp4|m4s)).*
+acl tostoreid url_regex -i ^https:\/\/(skyfiregce-a\.akamaihd\.net)\/(.*\/.*)\/(video)\/(.*\.(m4s|mp4)).*
+
+acl vimeo url_regex ^https:\/\/.*vimeocdn\.com\/(.*)\/(.*\.(mp4|m4s)).*
+acl vimeo url_regex ^https:\/\/(skyfiregce-a\.akamaihd\.net)\/(.*\/.*)\/(video)\/(.*\.m4s|mp4).*
+
+acl helper url_regex -i ^https?\:\/\/.*
+acl httptomiss http_status 302
+acl bypass req_mime_type -i ^text/plain
+acl bypass req_mime_type -i ^text/html
+
+#deny_info http://pastebin.com/raw.php?i=NBptAD3B ytHack	#144p
+#deny_info http://pastebin.com/raw.php?i=K3xJKL33 ytHack	#240p
+deny_info http://pastebin.com/raw.php?i=CzuzS8Kt ytHack	#360p
+
+cache deny localhost
+
+acl spliceserver ssl::server_name "/etc/squid/splices.txt"
+
+acl step1 at_step SslBump1
+acl step2 at_step SslBump2
+acl step3 at_step SslBump3
+
+acl getmethod method GET
+
+#----------------------------------------------#
+#Access to squid:
+#local machine, no restriction
+#----------------------------------------------#
+http_access allow localhost manager
+http_access allow SSL_ports
+http_access allow localhost
+http_access allow localnet
+
+#----------------------------------------------#
+#Deny not web services
+#----------------------------------------------#
+http_access deny          !Safe_ports
+http_access deny  CONNECT !SSL_ports
+http_access deny manager
+http_access deny all
+
+http_access deny ytHack
+http_access deny chrome
+
+http_reply_access allow all
+
+httpd_suppress_version_string on
+
+#----------------------------------------------#
+#Strip HTTP Header
+#----------------------------------------------#
+
+range_offset_limit none partial_206
+range_offset_limit 128 KB !partial_206
+
+reply_header_access Alternate-Protocol deny all
+request_header_access User-Agent deny youtube !Android
+#request_header_replace User-Agent Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14
+request_header_replace User-Agent Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0) Opera 12.14
+
+request_header_access X-Forwarded-For deny all
+reply_header_access X-Forwarded-For deny all
+request_header_access Via deny all
+reply_header_access Via deny all
+
+#----------------------------------------------#
+#SSL CONFIGURATION
+#----------------------------------------------#
+always_direct allow all
+ssl_bump splice step1 spliceserver
+ssl_bump splice step2 spliceserver
+ssl_bump splice step3 spliceserver
+ssl_bump peek step1
+ssl_bump bump step2
+ssl_bump splice step3
+sslproxy_cert_error allow all
+sslproxy_flags DONT_VERIFY_PEER
+sslcrtd_program /usr/lib/squid/ssl_crtd -s /var/squid/ssl_db/certs/ -M 40MB
+sslcrtd_children 50 startup=50
+
+#----------------------------------------------#
+#STORE_ID HELPERS
+#----------------------------------------------#
+store_id_program /etc/squid/storeid.pl
+store_id_extras "%>a/%>A %un %>rm myip=%la myport=%lp referer=%{Referer}>h"
+store_id_children 50 startup=50
+store_id_access deny !getmethod
+store_id_access allow tostoreid
+store_id_access allow vimeo
+store_id_access allow helper
+store_id_access deny all
+
+store_miss deny helper httptomiss
+send_hit deny helper httptomiss
+store_miss deny helper bypass
+send_hit deny helper bypass
+
+#----------------------------------------------#
+# ADMINISTRATIVE PARAMETERS
+#----------------------------------------------#
+cache_mgr agungggz@facebook.com
+cache_effective_user proxy
+umask 022
+
+pid_filename /var/run/squid.pid
+
+cache_mem 8 MB
+digest_generation off
+
+memory_replacement_policy heap GDSF
+cache_replacement_policy heap LFUDA
+
+maximum_object_size_in_memory 0 KB
+maximum_object_size 2048000 KB
+minimum_object_size 0 KB
+
+cache_dir aufs /cache 250000 32 256
+access_log stdio:/tmp/access.log !CONNECT
+cache_log /tmp/cache.log
+cache_store_log none
+
+request_body_max_size 0 KB
+
+log_mime_hdrs off
+forwarded_for off
+via off
+
+shutdown_lifetime 5 seconds
+
+#--------------------------------------------#
+# DNS PARAMETERS
+#--------------------------------------------#
+dns_nameservers 208.67.222.222 208.67.220.220
+
+#--------------------------------------------#
+# TUNING
+#--------------------------------------------#
+icp_port 0
+
+memory_pools off
+pinger_enable off
+strip_query_terms off
+
+reload_into_ims on
+refresh_all_ims on
+vary_ignore_expire on
+
+cache_swap_high 99
+cache_swap_low 98
+max_filedesc 10240
+
+ipcache_low 98	#90
+ipcache_high 99	#95
+ipcache_size 2048	#1024
+fqdncache_size 1024 #
+
+quick_abort_min 0 KB
+quick_abort_max 0 KB
+quick_abort_pct 98
+
+client_db on	
+icp_hit_stale on
+query_icmp on
+
+pipeline_prefetch 100
+half_closed_clients off
+collapsed_forwarding on
+
+qos_flows tos local-hit=0x30
+qos_flows tos sibling-hit=0x31
+qos_flows tos parent-hit=0x32
+
+coredump_dir /var/spool/squid
+
+max_filedescriptors 65536
+
+#----------------------------------------------#
+# REFRESH PATTERN
+#----------------------------------------------#
+refresh_pattern -i ^https?\:\/\/pc-mikrotik\/youtube\/.* 432000 100% 432000 override-expire override-lastmod ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate store-stale
+refresh_pattern . 0 95% 432000 override-expire override-lastmod refresh-ims reload-into-ims ignore-reload ignore-no-store ignore-private ignore-auth ignore-must-revalidate
+
+max_stale 360 days
+
+#--------------------------------------------#
+# ENDS OF CONFIG
+#--------------------------------------------#
