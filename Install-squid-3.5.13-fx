@@ -204,7 +204,8 @@ cd squid-3.5.13
 '--enable-follow-x-forwarded-for' '--disable-ident-lookups' '--enable-x-accelerator-vary' '--enable-zph-qos' \
 '--with-default-user=proxy' '--with-logdir=/tmp' '--with-pidfile=/var/run/squid.pid' '--with-swapdir=/var/spool/squid' \
 '--with-large-files' '--enable-ltdl-convenience' '--with-filedescriptors=65536' '--enable-ssl' '--enable-ssl-crtd' '--disable-auth' \
-'--enable-ecap' '--disable-ipv6' '--enable-err-languages=English' '--enable-default-err-language=English' '--build=x86_64' 'build_alias=x86_64'
+'--enable-ecap' '--disable-ipv6' '--without-gnutls' '--without-mit-krb5' '--without-heimdal-krb5' '--without-gnugss' \
+'--enable-err-languages=English' '--enable-default-err-language=English' '--build=x86_64' 'build_alias=x86_64'
 
 sudo make && make install
 
